@@ -154,10 +154,10 @@ namespace ChatServer
 
             try
             {
+                long totalRead = 0;
                 using (FileStream fs = new FileStream(savePath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, true))
                 {
                     byte[] buffer = new byte[81920];
-                    long totalRead = 0;
                     int read;
 
                     while (totalRead < fileSize && (read = await stream.ReadAsync(buffer, 0, (int)Math.Min(buffer.Length, fileSize - totalRead))) > 0)
