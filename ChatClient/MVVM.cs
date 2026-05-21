@@ -26,6 +26,7 @@ namespace ChatClient
         public string Time { get; set; } = string.Empty;
         public Brush AvatarColor { get; set; } = Brushes.Gray;
         public string Initials { get; set; } = string.Empty;
+        public bool IsMine { get; set; }
         public bool IsFirstInGroup { get; set; }
         
         private ImageSource? _avatarImage;
@@ -35,12 +36,16 @@ namespace ChatClient
             set { _avatarImage = value; OnPropertyChanged(); OnPropertyChanged(nameof(AvatarInitialsVisibility)); OnPropertyChanged(nameof(AvatarImageVisibility)); } 
         }
 
-        public Visibility AvatarVisibility => IsFirstInGroup ? Visibility.Visible : Visibility.Hidden;
+        public Visibility AvatarVisibility => (!IsMine && IsFirstInGroup) ? Visibility.Visible : Visibility.Hidden;
         public Visibility AvatarInitialsVisibility => _avatarImage == null ? Visibility.Visible : Visibility.Hidden;
         public Visibility AvatarImageVisibility => _avatarImage != null ? Visibility.Visible : Visibility.Hidden;
         
-        public Visibility HeaderVisibility => IsFirstInGroup ? Visibility.Visible : Visibility.Collapsed;
-        public Thickness Margin => IsFirstInGroup ? new Thickness(10, 20, 10, 0) : new Thickness(10, 4, 10, 0);
+        public Visibility HeaderVisibility => (!IsMine && IsFirstInGroup) ? Visibility.Visible : Visibility.Collapsed;
+        public Thickness Margin => IsFirstInGroup ? new Thickness(10, 15, 10, 0) : new Thickness(10, 2, 10, 0);
+
+        public HorizontalAlignment Alignment => IsMine ? HorizontalAlignment.Right : HorizontalAlignment.Left;
+        public Brush MessageBackground => IsMine ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0078D4")) : new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2D2D30"));
+        public CornerRadius BubbleRadius => IsMine ? new CornerRadius(12, 12, 2, 12) : new CornerRadius(12, 12, 12, 2);
     }
 
     public class FileMessageViewModel : MessageViewModel
@@ -49,6 +54,11 @@ namespace ChatClient
         public string FileName { get; set; } = string.Empty;
         public string FileSizeStr { get; set; } = string.Empty;
         public string FileId { get; set; } = string.Empty;
+        
+        public bool IsMine { get; set; }
+        public HorizontalAlignment Alignment => IsMine ? HorizontalAlignment.Right : HorizontalAlignment.Left;
+        public Thickness Margin => IsMine ? new Thickness(20, 8, 20, 15) : new Thickness(60, 8, 20, 15);
+        public Brush MessageBackground => IsMine ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#005A9E")) : new SolidColorBrush((Color)ColorConverter.ConvertFromString("#28282B"));
         
         private string _statusText = string.Empty;
         public string StatusText 

@@ -219,9 +219,11 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="60"/>
                                     <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="60"/>
                                 </Grid.ColumnDefinitions>
                                 
-                                <Border Width="42" Height="42" CornerRadius="21" Background="{Binding AvatarColor}" VerticalAlignment="Top" Visibility="{Binding AvatarVisibility}">
+                                <!-- Avatar on left -->
+                                <Border Grid.Column="0" Width="42" Height="42" CornerRadius="21" Background="{Binding AvatarColor}" VerticalAlignment="Top" Visibility="{Binding AvatarVisibility}">
                                     <Grid>
                                         <TextBlock Text="{Binding Initials}" Foreground="#202020" FontWeight="Bold" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding AvatarInitialsVisibility}"/>
                                         <Ellipse Width="42" Height="42" Visibility="{Binding AvatarImageVisibility}">
@@ -232,24 +234,25 @@
                                     </Grid>
                                 </Border>
                                 
-                                <StackPanel Grid.Column="1">
+                                <StackPanel Grid.Column="1" HorizontalAlignment="{Binding Alignment}" MaxWidth="600">
                                     <StackPanel Orientation="Horizontal" Visibility="{Binding HeaderVisibility}" Margin="0,0,0,4">
-                                        <TextBlock Text="{Binding Sender}" Foreground="{StaticResource TextPrimary}" FontWeight="SemiBold" FontSize="15"/>
-                                        <TextBlock Text="{Binding Time}" Foreground="{StaticResource TextMuted}" FontSize="11" Margin="10,4,0,0"/>
+                                        <TextBlock Text="{Binding Sender}" Foreground="{StaticResource TextMuted}" FontWeight="SemiBold" FontSize="13"/>
+                                        <TextBlock Text="{Binding Time}" Foreground="{StaticResource TextMuted}" FontSize="11" Margin="10,2,0,0"/>
                                     </StackPanel>
-                                    <TextBlock Text="{Binding Text}" Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap" FontSize="15" LineHeight="22"/>
+                                    <Border Background="{Binding MessageBackground}" CornerRadius="{Binding BubbleRadius}" Padding="12,8">
+                                        <TextBlock Text="{Binding Text}" Foreground="{StaticResource TextPrimary}" TextWrapping="Wrap" FontSize="15" LineHeight="20"/>
+                                    </Border>
                                 </StackPanel>
                             </Grid>
                         </DataTemplate>
 
                         <!-- FILE MESSAGE -->
                         <DataTemplate DataType="{x:Type local:FileMessageViewModel}">
-                            <Border Background="{StaticResource BgCard}" CornerRadius="8" Padding="16" Margin="60,8,20,15" HorizontalAlignment="Left" MaxWidth="450" BorderBrush="#1AFFFFFF" BorderThickness="1">
+                            <Border Background="{Binding MessageBackground}" CornerRadius="8" Padding="16" Margin="{Binding Margin}" HorizontalAlignment="{Binding Alignment}" MaxWidth="450" BorderBrush="#1AFFFFFF" BorderThickness="1">
                                 <Border.Effect>
                                     <DropShadowEffect Color="Black" BlurRadius="15" ShadowDepth="4" Opacity="0.15" Direction="270"/>
                                 </Border.Effect>
                                 <StackPanel>
-                                    <TextBlock Text="{Binding Sender, StringFormat='{}Attachment from {0}'}" Foreground="{StaticResource TextMuted}" FontSize="12" Margin="0,0,0,10" FontWeight="SemiBold"/>
                                     
                                     <Border Visibility="{Binding ImageVisibility}" CornerRadius="6" Margin="0,0,0,10" ClipToBounds="True">
                                         <Image Source="{Binding ImageContent}" Stretch="Uniform" MaxHeight="300" MaxWidth="400"/>

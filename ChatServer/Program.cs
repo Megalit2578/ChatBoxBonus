@@ -25,7 +25,7 @@ namespace ChatServer
 
             int port = 5000;
             TcpListener listener = new TcpListener(IPAddress.Any, port);
-            
+
             try
             {
                 listener.Start();
@@ -48,7 +48,7 @@ namespace ChatServer
             try
             {
                 NetworkStream stream = client.GetStream();
-                
+
                 // Read the first line manually to avoid buffering too much if it's a file stream
                 using var ms = new MemoryStream();
                 byte[] buffer = new byte[1];
@@ -60,7 +60,7 @@ namespace ChatServer
 
                 // Decode the accumulated bytes as UTF-8
                 string header = Encoding.UTF8.GetString(ms.ToArray()).Trim('\uFEFF'); // Trim BOM if present
-                
+
                 if (header.StartsWith("USER:"))
                 {
                     await HandleTextClientAsync(client, stream, header.Substring(5).Trim());
@@ -102,7 +102,7 @@ namespace ChatServer
             {
                 using StreamReader reader = new StreamReader(stream, Encoding.UTF8, leaveOpen: true);
                 using StreamWriter writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true) { AutoFlush = true };
-                
+
                 int count = 1;
                 string originalName = userName;
                 while (connectedClients.ContainsKey(userName))
@@ -152,7 +152,7 @@ namespace ChatServer
                     byte[] buffer = new byte[81920];
                     long totalRead = 0;
                     int read;
-                    
+
                     while (totalRead < fileSize && (read = await stream.ReadAsync(buffer, 0, (int)Math.Min(buffer.Length, fileSize - totalRead))) > 0)
                     {
                         await fs.WriteAsync(buffer, 0, read);
@@ -177,7 +177,7 @@ namespace ChatServer
         private static async Task HandleFileDownloadAsync(TcpClient client, NetworkStream stream, string fileId)
         {
             string filePath = Path.Combine(uploadsDir, fileId);
-            
+
             Console.WriteLine($"[⬆️] Client requesting download of {fileId}...");
 
             try

@@ -429,6 +429,7 @@ namespace ChatClient
                 Time = DateTime.Now.ToString("HH:mm"),
                 AvatarColor = GetAvatarColor(sender),
                 Initials = sender.Length > 0 ? sender.Substring(0, 1).ToUpper() : "U",
+                IsMine = sender == _userName,
                 IsFirstInGroup = isFirst,
                 AvatarImage = avatarImage
             });
@@ -442,7 +443,8 @@ namespace ChatClient
                 Sender = sender,
                 FileName = fileName,
                 FileSizeStr = FormatBytes(fileSize),
-                FileId = fileId
+                FileId = fileId,
+                IsMine = sender == _userName
             };
             vm.DownloadCommand = new RelayCommand(async () => await DownloadFileAsync(vm));
             Messages.Add(vm);
