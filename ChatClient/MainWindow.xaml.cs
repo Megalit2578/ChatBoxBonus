@@ -402,6 +402,9 @@ namespace ChatClient
                 vm.StatusText = "Failed";
                 vm.StatusColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E81123"));
                 MessageBox.Show($"Download failed: {ex.Message}");
+            }
+            finally
+            {
                 vm.CanDownload = true;
             }
         }
@@ -443,6 +446,54 @@ namespace ChatClient
             };
             vm.DownloadCommand = new RelayCommand(async () => await DownloadFileAsync(vm));
             Messages.Add(vm);
+
+            if (IsImageFile(fileName) && fileSize < 10 * 1024 * 1024) // auto download images < 10MB
+            {
+                _ = AutoDownloadAndDisplayImageAsync(vm);
+            }
+        }
+
+        private bool IsImageFile(string fileName)
+        {
+            string ext = Path.GetExtension(fileName).ToLower();
+            return ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".gif" || ext == ".bmp" || ext == ".webp";
+        }
+
+        private async Task AutoDownloadAndDisplayImageAsync(FileMessageViewModel vm)
+        {
+            string tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}_{vm.FileName}");
+            
+            try
+            {
+                TcpClient downloadClient = new TcpClient();
+                await downloadClient.ConnectAsync(_serverIP, _serverPort);
+
+                using NetworkStream stream = downloadClient.GetStream();
+                byte[] headerBytes = Encoding.UTF8.GetBytes($"FILE_DOWNLOAD:{vm.FileId}\n");
+                await stream.WriteAsync(headerBytes, 0, headerBytes.Length);
+
+                using (FileStream fs = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None, 81920, true))
+                {
+                    await stream.CopyToAsync(fs);
+                }
+
+                downloadClient.Close();
+                
+                Dispatcher.Invoke(() => 
+                {
+                    var bitmap = new System.Windows.Media.Imaging.BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                    bitmap.UriSource = new Uri(tempFile);
+                    bitmap.EndInit();
+                    bitmap.Freeze();
+                    vm.ImageContent = bitmap;
+                });
+            }
+            catch 
+            {
+                // Silently fail if auto-download errors, users can still download manually
+            }
         }
 
         private static SolidColorBrush GetAvatarColor(string name)

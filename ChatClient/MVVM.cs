@@ -72,6 +72,20 @@ namespace ChatClient
         }
 
         public ICommand? DownloadCommand { get; set; }
+
+        private ImageSource? _imageContent;
+        public ImageSource? ImageContent 
+        {
+            get => _imageContent;
+            set 
+            { 
+                _imageContent = value; 
+                OnPropertyChanged(); 
+                OnPropertyChanged(nameof(ImageVisibility));
+            }
+        }
+
+        public Visibility ImageVisibility => _imageContent != null ? Visibility.Visible : Visibility.Collapsed;
     }
 
     public class RelayCommand : ICommand

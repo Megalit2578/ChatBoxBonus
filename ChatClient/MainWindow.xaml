@@ -250,6 +250,11 @@
                                 </Border.Effect>
                                 <StackPanel>
                                     <TextBlock Text="{Binding Sender, StringFormat='{}Attachment from {0}'}" Foreground="{StaticResource TextMuted}" FontSize="12" Margin="0,0,0,10" FontWeight="SemiBold"/>
+                                    
+                                    <Border Visibility="{Binding ImageVisibility}" CornerRadius="6" Margin="0,0,0,10" ClipToBounds="True">
+                                        <Image Source="{Binding ImageContent}" Stretch="Uniform" MaxHeight="300" MaxWidth="400"/>
+                                    </Border>
+                                    
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
