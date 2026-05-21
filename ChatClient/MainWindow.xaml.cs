@@ -354,6 +354,7 @@ namespace ChatClient
                     await stream.FlushAsync();
                 }
 
+                try { uploadClient.Client.Shutdown(SocketShutdown.Send); } catch { }
                 uploadClient.Close();
                 AppendSystemMessage($"Uploaded {fileName} successfully.");
             }
@@ -393,6 +394,7 @@ namespace ChatClient
                     await stream.CopyToAsync(fs);
                 }
 
+                try { downloadClient.Client.Shutdown(SocketShutdown.Both); } catch { }
                 downloadClient.Close();
                 vm.StatusText = "Downloaded";
                 vm.StatusColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10893E"));
@@ -479,6 +481,7 @@ namespace ChatClient
                     await stream.CopyToAsync(fs);
                 }
 
+                try { downloadClient.Client.Shutdown(SocketShutdown.Both); } catch { }
                 downloadClient.Close();
                 
                 Dispatcher.Invoke(() => 

@@ -68,10 +68,17 @@ namespace ChatServer
                 else if (header.StartsWith("FILE_UPLOAD:"))
                 {
                     // FILE_UPLOAD:userName:fileName:fileSize
-                    string[] parts = header.Split(new[] { ':' }, 4);
-                    if (parts.Length == 4)
+                    int lastColon = header.LastIndexOf(':');
+                    int firstColon = header.IndexOf(':');
+                    int secondColon = header.IndexOf(':', firstColon + 1);
+                    
+                    if (lastColon > secondColon && secondColon > firstColon)
                     {
-                        await HandleFileUploadAsync(client, stream, parts[1], parts[2], long.Parse(parts[3]));
+                        string userName = header.Substring(firstColon + 1, secondColon - firstColon - 1);
+                        string fileName = header.Substring(secondColon + 1, lastColon - secondColon - 1);
+                        long fileSize = long.Parse(header.Substring(lastColon + 1));
+                        
+                        await HandleFileUploadAsync(client, stream, userName, fileName, fileSize);
                     }
                     else
                     {
@@ -160,6 +167,11 @@ namespace ChatServer
                     }
                 }
 
+                if (totalRead < fileSize)
+                {
+                    throw new Exception($"Incomplete upload: expected {fileSize} bytes, got {totalRead}");
+                }
+
                 Console.WriteLine($"[✅] File '{fileName}' received and saved as {fileId}.");
                 await BroadcastRawMessageAsync($"FILE_OFFER:{userName}:{fileName}:{fileSize}:{fileId}");
             }
@@ -170,6 +182,7 @@ namespace ChatServer
             }
             finally
             {
+                try { client.Client.Shutdown(SocketShutdown.Both); } catch { }
                 client.Close();
             }
         }
@@ -189,6 +202,7 @@ namespace ChatServer
                         await fs.CopyToAsync(stream);
                         await stream.FlushAsync();
                     }
+                    try { client.Client.Shutdown(SocketShutdown.Send); } catch { }
                     Console.WriteLine($"[✅] File {fileId} sent successfully.");
                 }
                 else
@@ -202,6 +216,7 @@ namespace ChatServer
             }
             finally
             {
+                try { client.Client.Shutdown(SocketShutdown.Both); } catch { }
                 client.Close();
             }
         }
