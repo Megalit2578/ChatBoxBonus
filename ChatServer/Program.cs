@@ -47,8 +47,9 @@ namespace ChatServer
         {
             try
             {
-                client.ReceiveBufferSize = 1024 * 1024 * 2; // 2MB
-                client.SendBufferSize = 1024 * 1024 * 2; // 2MB
+                client.NoDelay = true;
+                client.ReceiveBufferSize = 1024 * 1024 * 16; // 16MB
+                client.SendBufferSize = 1024 * 1024 * 16;    // 16MB
                 NetworkStream stream = client.GetStream();
 
                 // Read the first line manually to avoid buffering too much if it's a file stream
@@ -157,9 +158,9 @@ namespace ChatServer
             try
             {
                 long totalRead = 0;
-                using (FileStream fs = new FileStream(savePath, FileMode.Create, FileAccess.Write, FileShare.None, 1024 * 1024, FileOptions.Asynchronous | FileOptions.SequentialScan))
+                using (FileStream fs = new FileStream(savePath, FileMode.Create, FileAccess.Write, FileShare.None, 4 * 1024 * 1024, FileOptions.Asynchronous | FileOptions.SequentialScan))
                 {
-                    byte[] buffer = new byte[1024 * 1024]; // 1MB buffer
+                    byte[] buffer = new byte[4 * 1024 * 1024]; // 4MB buffer
                     int read;
 
                     while (totalRead < fileSize && (read = await stream.ReadAsync(buffer, 0, (int)Math.Min(buffer.Length, fileSize - totalRead))) > 0)
@@ -199,9 +200,9 @@ namespace ChatServer
             {
                 if (File.Exists(filePath))
                 {
-                    using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, 1024 * 1024, FileOptions.Asynchronous | FileOptions.SequentialScan))
+                    using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4 * 1024 * 1024, FileOptions.Asynchronous | FileOptions.SequentialScan))
                     {
-                        await fs.CopyToAsync(stream, 1024 * 1024);
+                        await fs.CopyToAsync(stream, 4 * 1024 * 1024);
                         await stream.FlushAsync();
                     }
                     try { client.Client.Shutdown(SocketShutdown.Send); } catch { }

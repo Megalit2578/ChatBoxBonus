@@ -342,16 +342,18 @@ namespace ChatClient
                 AppendSystemMessage($"Uploading {fileName} ({FormatBytes(fileSize)})...");
 
                 TcpClient uploadClient = new TcpClient();
-                uploadClient.SendBufferSize = 1024 * 1024 * 2; // 2MB
+                uploadClient.NoDelay = true;
+                uploadClient.SendBufferSize = 1024 * 1024 * 16; // 16MB
+                uploadClient.ReceiveBufferSize = 1024 * 1024 * 4; // 4MB
                 await uploadClient.ConnectAsync(_serverIP, _serverPort);
 
                 using NetworkStream stream = uploadClient.GetStream();
                 byte[] headerBytes = Encoding.UTF8.GetBytes($"FILE_UPLOAD:{_userName}:{fileName}:{fileSize}\n");
                 await stream.WriteAsync(headerBytes, 0, headerBytes.Length);
 
-                using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, 1024 * 1024, FileOptions.Asynchronous | FileOptions.SequentialScan))
+                using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4 * 1024 * 1024, FileOptions.Asynchronous | FileOptions.SequentialScan))
                 {
-                    await fs.CopyToAsync(stream, 1024 * 1024);
+                    await fs.CopyToAsync(stream, 4 * 1024 * 1024);
                     await stream.FlushAsync();
                 }
 
@@ -384,16 +386,38 @@ namespace ChatClient
             try
             {
                 TcpClient downloadClient = new TcpClient();
-                downloadClient.ReceiveBufferSize = 1024 * 1024 * 2; // 2MB
+                downloadClient.NoDelay = true;
+                downloadClient.ReceiveBufferSize = 1024 * 1024 * 16; // 16MB
+                downloadClient.SendBufferSize = 1024 * 1024 * 4;     // 4MB
                 await downloadClient.ConnectAsync(_serverIP, _serverPort);
 
                 using NetworkStream stream = downloadClient.GetStream();
                 byte[] headerBytes = Encoding.UTF8.GetBytes($"FILE_DOWNLOAD:{vm.FileId}\n");
                 await stream.WriteAsync(headerBytes, 0, headerBytes.Length);
 
-                using (FileStream fs = new FileStream(savePath, FileMode.Create, FileAccess.Write, FileShare.None, 1024 * 1024, FileOptions.Asynchronous | FileOptions.SequentialScan))
+                const int bufferSize = 4 * 1024 * 1024; // 4MB read buffer
+                byte[] buffer = new byte[bufferSize];
+                long totalRead = 0;
+                long fileSize = vm.FileSize;
+                var lastUpdate = DateTime.UtcNow;
+
+                using (FileStream fs = new FileStream(savePath, FileMode.Create, FileAccess.Write,
+                        FileShare.None, bufferSize, FileOptions.Asynchronous | FileOptions.SequentialScan))
                 {
-                    await stream.CopyToAsync(fs, 1024 * 1024);
+                    int bytesRead;
+                    while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                    {
+                        await fs.WriteAsync(buffer, 0, bytesRead);
+                        totalRead += bytesRead;
+
+                        var now = DateTime.UtcNow;
+                        if (fileSize > 0 && (now - lastUpdate).TotalMilliseconds >= 250)
+                        {
+                            lastUpdate = now;
+                            int pct = (int)(totalRead * 100L / fileSize);
+                            vm.StatusText = $"Downloading... {pct}%";
+                        }
+                    }
                 }
 
                 try { downloadClient.Client.Shutdown(SocketShutdown.Both); } catch { }
@@ -447,6 +471,7 @@ namespace ChatClient
                 Sender = sender,
                 FileName = fileName,
                 FileSizeStr = FormatBytes(fileSize),
+                FileSize = fileSize,
                 FileId = fileId,
                 IsMine = sender == _userName
             };

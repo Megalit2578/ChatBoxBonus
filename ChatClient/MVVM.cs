@@ -53,6 +53,7 @@ namespace ChatClient
         public string Sender { get; set; } = string.Empty;
         public string FileName { get; set; } = string.Empty;
         public string FileSizeStr { get; set; } = string.Empty;
+        public long FileSize { get; set; }
         public string FileId { get; set; } = string.Empty;
         
         public bool IsMine { get; set; }
